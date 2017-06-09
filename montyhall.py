@@ -3,11 +3,11 @@ import random
 
 """                     The MONTY HALL Statistics problem APP
                         --------------------------------------
-    the monte carlo problem problem presents a simple conundrum where in a gaming show; a person
-    is asked to pick one of three doors each of which holds either a car or  nothing. Now there is only one car
+    the monte Hall problem problem presents a simple conundrum where in a gaming show; a person
+    is asked to pick one of three doors, each of which holds either a car or nothing. Now there is only one car
     in the game and thus only one door holds the car while the others have nothing behind them. the game's host
-    opens and reveals one of the empty doors and asks the participant if he / she wishes to change his door pick
-    or go with their first choice.
+    opens one door and reveals one of the empty doors and asks the participant if he / she wishes to change his door
+    pick or go with their first choice.
 
 """
 
@@ -26,7 +26,7 @@ class Room(object):
     # properties
     def __init__(self):
         self.door = ""  # Door() maybe should be an object
-        self.prize = "goat"
+        self.prize = "nothing"
         self.state = "closed"  # either open or closed
 
 
@@ -34,14 +34,6 @@ class Door(object):
     def __init__(self):
         self.color = ""
 
-class Counter(object):
-
-    same_counter = 0
-    diff_counter = 0
-    total = 0
-
-    def __init__(self):
-        pass
 
 def randomisation_engine(a_list):
     """ returns an extremely random value:
@@ -58,7 +50,8 @@ def randomisation_engine(a_list):
             second_random_choice.prize = "car"
             bool_counter = False
 
-def main():
+
+def main(total=0, same_counter=0, diff_counter=0):
     # initialize the game:
 
     # initialize the three rooms:
@@ -73,64 +66,79 @@ def main():
     # set one of the rooms prizes to hold a car
     randomisation_engine(rooms_list)
 
+    def except_room_str(listing):
+        string = ""
+        if len(listing) > 0:
+            string += str(listing[0])
+        for number in range(1, len(listing)):
+            string += "|" + str(listing[number])
+        return string
+
+    first_choice, second_choice = 0, 0
+
+    def input_choice(choice, listing):
+        temp_choice = int(input("please type in door choice(%s): " % except_room_str(listing)))
+        if temp_choice not in listing:
+            raise Exception('Choice does not exist')
+        else:
+            choice = temp_choice
+    first_choice = input_choice(first_choice, [0, 1, 2])
     # ask for the user's first choice
-    first_choice = int(input("please type in first door choice(0|1|2): "))
 
-    # here is where we choose the one door with a goat and set its state to opened
-
-    # for room in rooms_list:
-    #     if room.prize == "goat" and rooms_list.index(room) != first_choice:
-    #         pc_open_index = rooms_list.index(room)
-    #         break
-
-    # i would prefer if we randomized the room holding a goat as opposed to the above
-    goat_popped_room = random.choice([ room for room in rooms_list if room.prize == "goat" and
-                                       rooms_list.index(room) != first_choice])
-    pc_open_index = rooms_list.index(goat_popped_room)
+    popped_room = random.choice([room for room in rooms_list if room.prize == "nothing" and
+                                 rooms_list.index(room) != first_choice])
+    pc_open_index = rooms_list.index(popped_room)
     rooms_list[pc_open_index].state = "open"
 
-    print("Room%s was opened and thus unavailable for selection." % pc_open_index)
+    print("Room %s was opened and thus unavailable for selection." % pc_open_index)
 
-    # popped_room = rooms_list.pop(rooms_list[pc_open_index])
     # compute a string containing the indices of rooms that are still closed
     def generator(a_list):
         for room in a_list:
             if room.state == "closed":
                 yield rooms_list.index(room)
-    string_list = [ str(room_index) for room_index in generator(rooms_list)]
-    stringified = "|".join(string_list)
-    second_choice = int(input("please type in second door choice(%s): " % stringified))
+    string_list = [int(room_index) for room_index in generator(rooms_list)]
+    input_choice(second_choice, string_list)
 
-    print("you have won : ", rooms_list[second_choice].prize)
+    if rooms_list[second_choice].prize == "car":
+        print("you have won : ", rooms_list[second_choice].prize)
+    else:
+        print("You have did not get the car this tym round!")
 
-    same_choice = Counter()
 
     if first_choice == second_choice:
-        same_choice.total += 1
+        total += 1
         if rooms_list[second_choice].prize == "car":
-            same_choice.same_counter += 1
+            same_counter += 1
     elif first_choice != second_choice:
-        same_choice.total += 1
+        total += 1
         if rooms_list[second_choice].prize == "car":
-            same_choice.diff_counter += 1
-    return  same_choice
+            diff_counter += 1
+
+    return [total, same_counter, diff_counter]
 
     # and now for an analysis:
 
 
 def loop_main():
+    total, same_counter, diff_counter = 0, 0, 0
     while True:
         choice = input("Press any key to proceed(**q to quit**): ")
         if choice == "q":
-            return
+            break
         else:
             same_choice = main()
-            print(same_choice.total, same_choice.same_counter, same_choice.diff_counter)
-            if same_choice.total > 0:
-                same_perc = int(same_choice.same_counter // same_choice.total * 100)
-                print("Your win percentage after sticking with the same choice: %s" % (same_perc))
-                diff_perc = int(same_choice.diff_counter // same_choice.total * 100)
-                print("Your win percentage after choosing to switch choices: %s" % diff_perc)
+            total += same_choice[0]
+            same_counter += same_choice[1]
+            diff_counter += same_choice[2]
+
+    if total > 0:
+        if same_counter > 0:
+            same_perc = int(same_counter // total * 100)
+            print("Your win percentage after sticking with the same choice: %s" % (same_perc))
+        if diff_counter > 0:
+            diff_perc = int(diff_counter // total * 100)
+            print("Your win percentage after choosing to switch choices: %s" % diff_perc)
 
 
 if __name__ == "__main__":
